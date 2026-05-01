@@ -1,0 +1,24 @@
+diff --git a/render/color_lcms2.c b/render/color_lcms2.c
+index c0f4db81..f6498ac9 100644
+--- a/render/color_lcms2.c
++++ b/render/color_lcms2.c
+@@ -50,8 +50,11 @@ struct wlr_color_transform *wlr_color_transform_init_linear_to_icc(
+ 		linear_tone_curve,
+ 		linear_tone_curve,
+ 	};
++
++	cmsToneCurve **vcgtTag = (cmsToneCurve **)cmsReadTag(icc_profile, cmsSigVcgtTag);
++
+ 	cmsHPROFILE srgb_profile = cmsCreateRGBProfileTHR(ctx, &srgb_whitepoint,
+-		&srgb_primaries, linear_tf);
++		&srgb_primaries, vcgtTag && *vcgtTag ? vcgtTag : linear_tf);
+ 	if (srgb_profile == NULL) {
+ 		wlr_log(WLR_ERROR, "cmsCreateRGBProfileTHR failed");
+ 		goto out_linear_tone_curve;
+@@ -115,5 +118,5 @@ out_icc_profile:
+ 	cmsCloseProfile(icc_profile);
+ out_ctx:
+ 	cmsDeleteContext(ctx);
+-	return &tx->base;
++	return tx ? &tx->base : NULL;
+ }

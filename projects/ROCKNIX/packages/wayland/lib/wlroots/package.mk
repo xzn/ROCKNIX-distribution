@@ -34,13 +34,27 @@ configure_package() {
   if [ "${OPENGLES_SUPPORT}" = "yes" ]; then
     PKG_DEPENDS_TARGET+=" ${OPENGLES}"
   fi
+
+  # Vulkan Support
+  if [ "${VULKAN_SUPPORT}" = "yes" ]; then
+    PKG_DEPENDS_TARGET+=" ${VULKAN} liblcms2"
+  fi
 }
 # to enable xwayland package: https://gitlab.freedesktop.org/xorg/lib/libxcb-wm/-/tree/master/icccm?ref_type=heads
 PKG_MESON_OPTS_TARGET="-Dxcb-errors=disabled \
                        -Dxwayland=enabled \
                        -Dexamples=false \
-                       -Drenderers=gles2 \
                        -Dbackends=drm,libinput"
+
+if [ "${OPENGLES_SUPPORT}" = "yes" ] && [ "${VULKAN_SUPPORT}" = "yes" ]; then
+  PKG_MESON_OPTS_TARGET+=" -Drenderers=gles2,vulkan \
+                           -Dcolor-management=enabled"
+elif [ "${OPENGLES_SUPPORT}" = "yes" ]; then
+  PKG_MESON_OPTS_TARGET+=" -Drenderers=gles2"
+elif [ "${VULKAN_SUPPORT}" = "yes" ]; then
+  PKG_MESON_OPTS_TARGET+=" -Drenderers=vulkan \
+                           -Dcolor-management=enabled"
+fi
 
 unpack() {
   mkdir -p ${PKG_BUILD}
